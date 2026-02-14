@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   ChevronLeft, ChevronRight, ChevronDown,
   PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen,
   Search, Users, CreditCard, Clock, CalendarDays, List
 } from "lucide-react";
+import { useOutletContext } from "react-router";
 import { ReservationPanel } from "../panels/ReservationPanel";
 
 /* ═══ 타입 ═══ */
@@ -114,6 +115,13 @@ const getBadgeStyle = (status: string) => {
 export function Operations() {
   const [selectedDay, setSelectedDay] = useState(TODAY);
   const [panelReservation, setPanelReservation] = useState<Reservation | null>(null);
+  const { setHideFloatingButton } = useOutletContext<{ setHideFloatingButton: (v: boolean) => void }>();
+
+  // 패널 열릴 때 플로팅 버튼 숨기기
+  useEffect(() => {
+    setHideFloatingButton(!!panelReservation);
+    return () => setHideFloatingButton(false);
+  }, [panelReservation, setHideFloatingButton]);
 
   // 패널 접기 상태
   const [listCollapsed, setListCollapsed] = useState(false);
@@ -191,8 +199,11 @@ export function Operations() {
             </div>
             <button
               onClick={() => setListCollapsed(true)}
-              className="w-8 h-8 rounded-lg border border-[#E6E2DB] flex items-center justify-center hover:bg-[#F7F3ED] cursor-pointer transition-colors"
-              title="예약 목록 접기"
+              disabled={calCollapsed}
+              className={`w-8 h-8 rounded-lg border border-[#E6E2DB] flex items-center justify-center transition-colors ${
+                calCollapsed ? "opacity-30 cursor-not-allowed" : "hover:bg-[#F7F3ED] cursor-pointer"
+              }`}
+              title={calCollapsed ? "캘린더가 접혀 있어 접을 수 없습니다" : "예약 목록 접기"}
             >
               <PanelLeftClose size={15} className="text-[#6B7280]" />
             </button>
@@ -269,7 +280,7 @@ export function Operations() {
         </div>
 
         {/* 예약 리스트 */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {dayReservations.length > 0 ? (
             <div>
               {/* 시간대별 그룹 */}
@@ -391,8 +402,11 @@ export function Operations() {
             </button>
             <button
               onClick={() => setCalCollapsed(true)}
-              className="w-8 h-8 rounded-lg border border-[#E6E2DB] flex items-center justify-center hover:bg-[#F7F3ED] cursor-pointer transition-colors"
-              title="캘린더 접기"
+              disabled={listCollapsed}
+              className={`w-8 h-8 rounded-lg border border-[#E6E2DB] flex items-center justify-center transition-colors ${
+                listCollapsed ? "opacity-30 cursor-not-allowed" : "hover:bg-[#F7F3ED] cursor-pointer"
+              }`}
+              title={listCollapsed ? "목록이 접혀 있어 접을 수 없습니다" : "캘린더 접기"}
             >
               <PanelRightClose size={15} className="text-[#6B7280]" />
             </button>
@@ -400,7 +414,7 @@ export function Operations() {
         </div>
 
         {/* 캘린더 그리드 */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-hidden p-4">
           <div className="grid grid-cols-7 gap-0">
             {/* 요일 헤더 */}
             {WEEK_DAYS.map((d, i) => (

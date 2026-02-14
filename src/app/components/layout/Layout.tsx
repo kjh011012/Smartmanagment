@@ -25,6 +25,7 @@ export function Layout() {
   const navigate = useNavigate();
   const [showQuickInput, setShowQuickInput] = useState(false);
   const [showDockingPanel, setShowDockingPanel] = useState(false);
+  const [hideFloatingButton, setHideFloatingButton] = useState(false);
   const pageInfo = pageTitles[location.pathname] || { title: "이웃우리 Pro" };
   const isAIPage = location.pathname === "/ai-assistant";
   const isDashboard = location.pathname === "/";
@@ -66,8 +67,8 @@ export function Layout() {
           onQuickInput={() => setShowQuickInput(true)}
         />
         <div className="flex-1 flex overflow-hidden">
-          <main className={`flex-1 ${isAIPage ? 'overflow-hidden' : 'overflow-y-auto p-8'}`}>
-            <Outlet />
+          <main className={`flex-1 min-w-0 ${isAIPage ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden p-8'}`}>
+            <Outlet context={{ setHideFloatingButton }} />
           </main>
           {/* 도킹 패널 (AI 전체화면 아닐 때) */}
           {!isAIPage && showDock && (
@@ -81,7 +82,7 @@ export function Layout() {
       </div>
 
       {/* 플로팅 버튼 (도킹 패널이 닫혀있고, AI 전체화면이 아닐 때) */}
-      {!isAIPage && !showDock && (
+      {!isAIPage && !showDock && !hideFloatingButton && (
         <FloatingAssistantButton onClick={handleOpenDock} />
       )}
 

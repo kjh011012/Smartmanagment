@@ -41,13 +41,13 @@ export function Dashboard() {
       {/* KPI 카드 */}
       <div className="grid grid-cols-3 xl:grid-cols-6 gap-5">
         {kpis.map((kpi, i) => (
-          <div key={i} className="bg-white rounded-[14px] border border-[#E6E2DB] p-5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] flex flex-col justify-between min-h-[120px]">
-            <p className="text-[13px] text-[#6B7280] mb-3">{kpi.label}</p>
-            <p className="text-[#1F2937] tracking-[-0.2px] leading-tight">
+          <div key={i} className="bg-white rounded-[14px] border border-[#E6E2DB] p-5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] flex flex-col justify-between min-h-[120px] min-w-0 overflow-hidden">
+            <p className="text-[13px] text-[#6B7280] mb-3 truncate">{kpi.label}</p>
+            <p className="text-[#1F2937] tracking-[-0.2px] leading-tight truncate">
               <span className="text-[22px]" style={{ fontWeight: 900 }}>{kpi.value}</span>
               <span className="text-[14px] text-[#6B7280] ml-1" style={{ fontWeight: 400 }}>{kpi.unit}</span>
             </p>
-            <div className={`flex items-center gap-1 mt-2 text-[13px] ${kpi.up ? "text-[#1B5E20]" : "text-[#C62828]"}`}>
+            <div className={`flex items-center gap-1 mt-2 text-[13px] truncate ${kpi.up ? "text-[#1B5E20]" : "text-[#C62828]"}`}>
               {kpi.up ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
               {kpi.trend}
             </div>
