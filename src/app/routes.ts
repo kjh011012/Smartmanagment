@@ -11,7 +11,9 @@ import { SmartCenter } from "./components/pages/SmartCenter";
 import { AIAssistant } from "./components/pages/AIAssistant";
 import { Automation } from "./components/pages/Automation";
 import { FixedCosts } from "./components/pages/FixedCosts";
+import { Specialties } from "./components/pages/Specialties";
 import { SettingsPage } from "./components/pages/SettingsPage";
+import { RefundPolicy } from "./components/pages/RefundPolicy";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +31,15 @@ export const router = createBrowserRouter([
       { path: "ai-assistant", Component: AIAssistant },
       { path: "automation", Component: Automation },
       { path: "fixed-costs", Component: FixedCosts },
+      { path: "specialties", Component: Specialties },
+      {
+        path: "fees-taxes",
+        lazy: async () => {
+          const { FeesTaxes } = await import("./components/pages/FeesTaxes");
+          return { Component: FeesTaxes };
+        },
+      },
+      { path: "refund-policy", Component: RefundPolicy },
       { path: "settings", Component: SettingsPage },
     ],
   },
