@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import {
-  X, Check, Search, ChevronDown, ChevronUp, ArrowRight,
-  MoreHorizontal, Lightbulb, TrendingUp,
+  X, Check, Search, ChevronDown, ArrowRight,
+  Lightbulb, TrendingUp,
   Bell, Settings2, CheckCheck, EyeOff,
-  Clock, ShieldAlert, BadgeInfo, Zap,
-  AlertCircle
+  ShieldAlert, BadgeInfo, Zap,
+  AlertCircle, ClipboardList
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -37,7 +37,7 @@ interface PrioritySettings {
   dailyLimit: number;
 }
 
-/* ═══ 더미 알림 데이터 ═══ */
+/* ═══ 더미 데이터 ═══ */
 const INITIAL_ALERTS: Alert[] = [
   {
     id: 1, priority: "critical", type: "경고",
@@ -59,7 +59,7 @@ const INITIAL_ALERTS: Alert[] = [
     id: 3, priority: "critical", type: "할 일",
     title: "미확인 카드 지출 35건이 쌓여 있습니다",
     desc: "확인하지 않은 카드 내역이 많으면 비용 집계가 부정확해집니다.",
-    reason: ["2월 1일 이후 확인 안 된 카드 내역이 35건입니다.", "총 미��인 금액은 약 1,580,000원입니다.", "지금 확인하면 이번 달 비용 보고서가 정확해집니다."],
+    reason: ["2월 1일 이후 확인 안 된 카드 내역이 35건입니다.", "총 미확인 금액은 약 1,580,000원입니다.", "지금 확인하면 이번 달 비용 보고서가 정확해집니다."],
     impact: "1,580,000원 미확인", impactType: "loss",
     time: "2시간 전", section: "warn", actionLabel: "내역 확인", actionPath: "/expense-input", read: false, hidden: false,
   },
@@ -140,17 +140,22 @@ const INITIAL_ALERTS: Alert[] = [
   },
 ];
 
+/* 섹션 정의 */
+const SECTIONS = [
+  { key: "warn", label: "경고", subLabel: "손해를 막아야 합니다", icon: ShieldAlert, color: "text-[#C62828]", bg: "bg-[#FDECEC]", accentBorder: "border-l-[#C62828]" },
+  { key: "recommend", label: "추천", subLabel: "매출을 늘릴 수 있습니다", icon: Lightbulb, color: "text-[#1B5E20]", bg: "bg-[#ECF7EE]", accentBorder: "border-l-[#2E7D32]" },
+  { key: "predict", label: "예측", subLabel: "미리 준비하세요", icon: TrendingUp, color: "text-[#2F4F46]", bg: "bg-[#F0F5F4]", accentBorder: "border-l-[#2F4F46]" },
+  { key: "recent", label: "할 일", subLabel: "처리가 필요합니다", icon: ClipboardList, color: "text-[#8A6A2B]", bg: "bg-[#FFF6E6]", accentBorder: "border-l-[#C69C3C]" },
+] as const;
+
 /* ═══ 컴포넌트 ═══ */
 export function SmartCenter() {
   const navigate = useNavigate();
   const [alerts, setAlerts] = useState<Alert[]>(INITIAL_ALERTS);
   const [filterPriority, setFilterPriority] = useState<"all" | Priority>("all");
-  const [filterType, setFilterType] = useState<string>("전체");
-  const [sortMode, setSortMode] = useState<"priority" | "latest">("priority");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showSettings, setShowSettings] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const [settings, setSettings] = useState<PrioritySettings>({ stockDays: 3, marginDrop: 10, costIncrease: 10, dailyLimit: 10 });
   const [draftSettings, setDraftSettings] = useState<PrioritySettings>(settings);
@@ -160,49 +165,37 @@ export function SmartCenter() {
     return alerts
       .filter(a => !a.hidden)
       .filter(a => filterPriority === "all" || a.priority === filterPriority)
-      .filter(a => filterType === "전체" || a.type === filterType)
       .filter(a => !searchQuery || a.title.includes(searchQuery) || a.desc.includes(searchQuery))
       .sort((a, b) => {
-        if (sortMode === "priority") {
-          const order = { critical: 0, warning: 1, info: 2 };
-          return order[a.priority] - order[b.priority];
-        }
-        return b.id - a.id;
+        const order = { critical: 0, warning: 1, info: 2 };
+        return order[a.priority] - order[b.priority];
       });
-  }, [alerts, filterPriority, filterType, searchQuery, sortMode]);
+  }, [alerts, filterPriority, searchQuery]);
 
   const unreadCount = alerts.filter(a => !a.read && !a.hidden).length;
   const criticalCount = alerts.filter(a => a.priority === "critical" && !a.hidden && !a.read).length;
+  const warningCount = alerts.filter(a => a.priority === "warning" && !a.hidden && !a.read).length;
 
-  /* 섹션 분류 */
+  /* 섹션별 알림 */
   const sectionAlerts = (section: string) => visibleAlerts.filter(a => a.section === section);
-  const warnAlerts = sectionAlerts("warn");
-  const recommendAlerts = sectionAlerts("recommend");
-  const predictAlerts = sectionAlerts("predict");
-  const recentAlerts = sectionAlerts("recent");
 
-  /* 오늘 핵심 */
+  /* 오늘 핵심 3가지 */
   const topAlerts = useMemo(() => {
-    return [...visibleAlerts.filter(a => !a.read)].sort((a, b) => {
+    return [...alerts.filter(a => !a.hidden && !a.read)].sort((a, b) => {
       const score = (al: Alert) => {
         if (al.priority === "critical" && al.type === "경고") return 0;
         if (al.priority === "critical") return 1;
         if (al.priority === "warning" && al.type === "경고") return 2;
-        if (al.priority === "warning") return 3;
-        return 5;
+        return 3;
       };
       return score(a) - score(b);
     }).slice(0, 3);
-  }, [visibleAlerts]);
+  }, [alerts]);
 
   /* 액션 */
-  const markRead = (id: number) => {
-    setAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
-    setMenuOpenId(null);
-  };
+  const markRead = (id: number) => setAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
   const hideAlert = (id: number) => {
     setAlerts(prev => prev.map(a => a.id === id ? { ...a, hidden: true } : a));
-    setMenuOpenId(null);
     if (expandedId === id) setExpandedId(null);
   };
   const markAllRead = () => {
@@ -219,101 +212,115 @@ export function SmartCenter() {
     });
   };
 
-  /* ═══ 색상 맵 ═══ */
-  const priorityDot: Record<Priority, string> = {
-    critical: "bg-[#C62828]",
-    warning: "bg-[#D4A520]",
-    info: "bg-[#9CA3AF]",
-  };
-  const typeStyle: Record<AlertType, { bg: string; text: string }> = {
-    "경고": { bg: "bg-[#FDECEC]", text: "text-[#C62828]" },
-    "추천": { bg: "bg-[#ECF7EE]", text: "text-[#1B5E20]" },
-    "예측": { bg: "bg-[#F0F5F4]", text: "text-[#2F4F46]" },
-    "할 일": { bg: "bg-[#FFF6E6]", text: "text-[#8A6A2B]" },
+  /* 색상 맵 */
+  const priorityLabel: Record<Priority, { label: string; dot: string }> = {
+    critical: { label: "긴급", dot: "bg-[#C62828]" },
+    warning: { label: "주의", dot: "bg-[#D4A520]" },
+    info: { label: "정보", dot: "bg-[#9CA3AF]" },
   };
 
-  /* ═══ 컴팩트 알림 행 ═══ */
-  const AlertRow = ({ alert }: { alert: Alert }) => {
-    const isOpen = expandedId === alert.id;
-    const ts = typeStyle[alert.type];
+  /* ═══ 핵심 카드 ═══ */
+  const TopCard = ({ alert, rank }: { alert: Alert; rank: number }) => {
+    const borderColors = ["border-l-[#C62828]", "border-l-[#D4A520]", "border-l-[#2F4F46]"];
+    const rankBgs = ["bg-[#C62828]", "bg-[#D4A520]", "bg-[#2F4F46]"];
 
     return (
-      <div className={`transition-all ${alert.read ? "opacity-55" : ""}`}>
-        {/* 한 줄 요약 */}
+      <div
+        className={`bg-white rounded-2xl border border-[#E6E2DB] border-l-[3px] ${borderColors[rank]} shadow-[0_1px_4px_rgba(0,0,0,0.03)] p-4 cursor-pointer hover:shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-all flex flex-col justify-between`}
+        onClick={() => { if (alert.actionPath) navigate(alert.actionPath); }}
+      >
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className={`w-5 h-5 rounded-md ${rankBgs[rank]} flex items-center justify-center text-[11px] text-white`} style={{ fontWeight: 700 }}>{rank + 1}</span>
+            <span className={`text-[11px] px-1.5 py-0.5 rounded ${
+              alert.priority === "critical" ? "bg-[#FDECEC] text-[#C62828]" : alert.priority === "warning" ? "bg-[#FFF6E6] text-[#8A6A2B]" : "bg-[#F0F5F4] text-[#2F4F46]"
+            }`} style={{ fontWeight: 700 }}>{alert.type}</span>
+          </div>
+          <p className="text-[15px] text-[#1F2937] leading-snug mb-2" style={{ fontWeight: 700 }}>{alert.title}</p>
+        </div>
+        <div className="flex items-center justify-between mt-1">
+          {alert.impact ? (
+            <span className={`text-[14px] ${alert.impactType === "loss" ? "text-[#C62828]" : "text-[#1B5E20]"}`} style={{ fontWeight: 700 }}>
+              {alert.impact}
+            </span>
+          ) : <span />}
+          <span className="flex items-center gap-1 text-[13px] text-[#2F4F46]" style={{ fontWeight: 700 }}>
+            {alert.actionLabel} <ArrowRight size={12} />
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  /* ═══ 알림 행 ═══ */
+  const AlertRow = ({ alert, accentBorder }: { alert: Alert; accentBorder: string }) => {
+    const isOpen = expandedId === alert.id;
+    const p = priorityLabel[alert.priority];
+
+    return (
+      <div className={`${alert.read ? "opacity-50" : ""} transition-all`}>
         <div
-          className={`flex items-center gap-3 px-4 py-3 cursor-pointer rounded-xl transition-colors ${
-            isOpen ? "bg-[#F7F3ED]" : "hover:bg-[#FBFAF7]"
+          className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors border-l-[3px] ${
+            isOpen ? `${accentBorder} bg-[#F7F3ED]` : "border-l-transparent hover:bg-[#FBFAF7]"
           }`}
           onClick={() => setExpandedId(isOpen ? null : alert.id)}
         >
           {/* 우선순위 점 */}
-          <span className={`w-3 h-3 rounded-full shrink-0 ${priorityDot[alert.priority]}`} />
+          <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${p.dot}`} />
 
-          {/* 유형 배지 */}
-          <span className={`text-[12px] px-2 py-0.5 rounded-md shrink-0 ${ts.bg} ${ts.text}`} style={{ fontWeight: 700, minWidth: 36, textAlign: "center" }}>
-            {alert.type}
-          </span>
-
-          {/* 미읽음 점 */}
-          {!alert.read ? (
-            <span className="w-2 h-2 rounded-full bg-[#C62828] shrink-0" />
-          ) : (
-            <span className="w-2 shrink-0" />
-          )}
+          {/* 미읽음 */}
+          {!alert.read && <span className="w-1.5 h-1.5 rounded-full bg-[#C62828] shrink-0" />}
 
           {/* 제목 */}
-          <span className="flex-1 text-[15px] text-[#1F2937] truncate leading-snug" style={{ fontWeight: alert.read ? 400 : 700 }}>
+          <span className="flex-1 text-[15px] text-[#1F2937] truncate" style={{ fontWeight: alert.read ? 400 : 700 }}>
             {alert.title}
           </span>
 
-          {/* 영향 금액 */}
+          {/* 영향 */}
           {alert.impact && (
-            <span className={`text-[13px] shrink-0 ${
-              alert.impactType === "loss" ? "text-[#C62828]" : "text-[#1B5E20]"
+            <span className={`text-[13px] shrink-0 px-2 py-0.5 rounded-md ${
+              alert.impactType === "loss" ? "bg-[#FDECEC] text-[#C62828]" : "bg-[#ECF7EE] text-[#1B5E20]"
             }`} style={{ fontWeight: 700 }}>
               {alert.impact}
             </span>
           )}
 
           {/* 시간 */}
-          <span className="text-[12px] text-[#9CA3AF] shrink-0 w-[52px] text-right">{alert.time}</span>
+          <span className="text-[12px] text-[#9CA3AF] shrink-0 w-[56px] text-right">{alert.time}</span>
 
           {/* 바로가기 */}
           {alert.actionPath && (
             <button
               onClick={e => { e.stopPropagation(); navigate(alert.actionPath!); }}
-              className="text-[13px] text-[#2F4F46] px-3 py-1 rounded-lg bg-[#ECF7EE] hover:bg-[#D4ECD7] cursor-pointer transition-colors shrink-0 flex items-center gap-1"
+              className="text-[13px] text-[#2F4F46] px-2.5 py-1 rounded-lg hover:bg-[#ECF7EE] cursor-pointer transition-colors shrink-0 flex items-center gap-1"
               style={{ fontWeight: 700 }}
             >
-              {alert.actionLabel}
+              {alert.actionLabel} <ArrowRight size={11} />
             </button>
           )}
 
-          {/* 펼치기 표시 */}
-          <ChevronDown size={14} className={`text-[#9CA3AF] shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+          <ChevronDown size={13} className={`text-[#9CA3AF] shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
         </div>
 
-        {/* 펼침 영역 */}
+        {/* 펼침 */}
         {isOpen && (
-          <div className="ml-[52px] mr-4 mb-2 mt-1 bg-white rounded-xl border border-[#E6E2DB] p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-            <p className="text-[14px] text-[#6B7280] leading-relaxed mb-3">{alert.desc}</p>
-
-            {/* 근거 */}
-            <div className="bg-[#FBFAF7] rounded-lg p-3.5 mb-3">
-              <p className="text-[13px] text-[#2F4F46] mb-2" style={{ fontWeight: 700 }}>왜 이런가요?</p>
-              <div className="space-y-1.5">
-                {alert.reason.map((r, i) => (
-                  <div key={i} className="flex gap-2">
-                    <span className="text-[12px] text-[#9CA3AF] shrink-0 mt-0.5" style={{ fontWeight: 700 }}>{i + 1}.</span>
-                    <p className="text-[14px] text-[#6B7280] leading-relaxed">{r}</p>
-                  </div>
-                ))}
+          <div className="mx-4 mb-3 mt-1 bg-white rounded-xl border border-[#E6E2DB] shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="p-4">
+              <p className="text-[14px] text-[#6B7280] leading-relaxed mb-3">{alert.desc}</p>
+              <div className="bg-[#FBFAF7] rounded-lg p-3.5 mb-3">
+                <p className="text-[13px] text-[#2F4F46] mb-2" style={{ fontWeight: 700 }}>왜 이런가요?</p>
+                <div className="space-y-1.5">
+                  {alert.reason.map((r, i) => (
+                    <div key={i} className="flex gap-2">
+                      <span className="text-[12px] text-[#9CA3AF] shrink-0 mt-0.5" style={{ fontWeight: 700 }}>{i + 1}.</span>
+                      <p className="text-[14px] text-[#6B7280] leading-relaxed">{r}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-
-            {/* 하단 액션 */}
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
+            <div className="flex items-center justify-between px-4 py-3 bg-[#FBFAF7] border-t border-[#E6E2DB]">
+              <div className="flex gap-3">
                 <button onClick={() => markRead(alert.id)} className="text-[13px] text-[#6B7280] hover:text-[#2F4F46] cursor-pointer flex items-center gap-1">
                   <Check size={13} /> 읽음
                 </button>
@@ -335,17 +342,6 @@ export function SmartCenter() {
       </div>
     );
   };
-
-  /* ═══ 섹션 헤더 ═══ */
-  const SectionHeader = ({ icon: Icon, iconColor, label, count }: {
-    icon: React.ElementType; iconColor: string; label: string; count: number;
-  }) => (
-    <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-      <Icon size={15} className={iconColor} />
-      <span className="text-[14px] text-[#1F2937]" style={{ fontWeight: 700 }}>{label}</span>
-      <span className="text-[12px] text-[#9CA3AF] bg-[#F7F3ED] px-1.5 py-0.5 rounded" style={{ fontWeight: 700 }}>{count}</span>
-    </div>
-  );
 
   /* ═══ 우선순위 설정 패널 ═══ */
   const renderSettingsPanel = () => {
@@ -392,24 +388,13 @@ export function SmartCenter() {
 
   /* ═══ 메인 렌더 ═══ */
   return (
-    <div className="max-w-[1160px]">
+    <div className="max-w-[1100px]">
 
-      {/* ─── 헤더 + 요약 통합 ─── */}
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-5">
+      {/* ── 헤더 ── */}
+      <div className="flex items-end justify-between mb-5">
+        <div>
           <h1 className="text-[22px] text-[#1F2937]" style={{ fontWeight: 700 }}>스마트 경영 센터</h1>
-          <div className="flex items-center gap-3">
-            {unreadCount > 0 && (
-              <span className="flex items-center gap-1.5 text-[14px] text-[#2F4F46] bg-[#ECF7EE] px-3 py-1 rounded-lg" style={{ fontWeight: 700 }}>
-                <Bell size={14} /> 읽지 않은 알림 {unreadCount}건
-              </span>
-            )}
-            {criticalCount > 0 && (
-              <span className="flex items-center gap-1.5 text-[14px] text-[#C62828] bg-[#FDECEC] px-3 py-1 rounded-lg" style={{ fontWeight: 700 }}>
-                <AlertCircle size={14} /> 긴급 {criticalCount}건
-              </span>
-            )}
-          </div>
+          <p className="text-[14px] text-[#6B7280] mt-1">AI가 분석한 경영 알림과 추천을 한눈에 확인하세요.</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => { setDraftSettings(settings); setShowSettings(true); }} className="h-[40px] px-4 rounded-xl border border-[#D6D0C8] text-[#6B7280] text-[13px] flex items-center gap-1.5 hover:bg-[#F7F3ED] transition-colors cursor-pointer">
@@ -421,173 +406,112 @@ export function SmartCenter() {
         </div>
       </div>
 
-      {/* ─── 2컬럼 ─── */}
-      <div className="flex gap-5 items-start">
-
-        {/* ══ 좌측: 오늘의 핵심 (고정 사이드) ══ */}
-        <div className="w-[300px] shrink-0 sticky top-[16px] space-y-4">
-          {/* 오늘의 핵심 카드 */}
-          {topAlerts.length > 0 && (
-            <div className="rounded-2xl bg-[#2F4F46] overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
-              <div className="px-5 py-3.5 flex items-center gap-2.5 border-b border-white/10">
-                <Zap size={16} className="text-[#FFD54F]" />
-                <span className="text-[15px] text-white" style={{ fontWeight: 700 }}>오늘의 핵심</span>
-              </div>
-              <div className="p-3 space-y-2">
-                {topAlerts.map((a, i) => (
-                  <div
-                    key={`top-${a.id}`}
-                    className="flex gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/15 cursor-pointer transition-colors"
-                    onClick={() => { if (a.actionPath) navigate(a.actionPath); }}
-                  >
-                    <span className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center text-[12px] text-white shrink-0" style={{ fontWeight: 700 }}>{i + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[14px] text-white leading-snug mb-1" style={{ fontWeight: 700 }}>{a.title}</p>
-                      {a.impact && (
-                        <span className={`text-[12px] px-2 py-0.5 rounded ${
-                          a.impactType === "loss" ? "bg-[#C62828]/30 text-[#FFA4A4]" : "bg-[#1B5E20]/30 text-[#A5D6A7]"
-                        }`} style={{ fontWeight: 700 }}>
-                          {a.impact}
-                        </span>
-                      )}
-                    </div>
-                    <ArrowRight size={14} className="text-white/50 shrink-0 mt-1" />
-                  </div>
-                ))}
-              </div>
+      {/* ── 오늘의 핵심 3가지 ── */}
+      {topAlerts.length > 0 && (
+        <div className="mb-5">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-7 h-7 rounded-lg bg-[#2F4F46] flex items-center justify-center">
+              <Zap size={14} className="text-[#FFD54F]" />
             </div>
-          )}
-
-          {/* 섹션 현황 */}
-          <div className="rounded-2xl bg-white border border-[#E6E2DB] p-4 shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
-            <p className="text-[14px] text-[#1F2937] mb-3 px-1" style={{ fontWeight: 700 }}>알림 현황</p>
-            <div className="space-y-1">
-              {[
-                { icon: ShieldAlert, color: "text-[#C62828]", bg: "bg-[#FDECEC]", label: "경고", count: warnAlerts.length },
-                { icon: Lightbulb, color: "text-[#1B5E20]", bg: "bg-[#ECF7EE]", label: "추천", count: recommendAlerts.length },
-                { icon: TrendingUp, color: "text-[#2F4F46]", bg: "bg-[#F0F5F4]", label: "예측", count: predictAlerts.length },
-                { icon: Bell, color: "text-[#6B7280]", bg: "bg-[#F7F3ED]", label: "최근", count: recentAlerts.length },
-              ].map(s => (
-                <div key={s.label} className="flex items-center gap-2.5 py-2 px-1">
-                  <div className={`w-7 h-7 rounded-lg ${s.bg} flex items-center justify-center`}>
-                    <s.icon size={14} className={s.color} />
-                  </div>
-                  <span className="flex-1 text-[14px] text-[#6B7280]">{s.label}</span>
-                  <span className="text-[15px] text-[#1F2937]" style={{ fontWeight: 700 }}>{s.count}</span>
-                </div>
-              ))}
-            </div>
+            <span className="text-[15px] text-[#1F2937]" style={{ fontWeight: 700 }}>오늘의 핵심</span>
+            <span className="text-[12px] text-[#9CA3AF]">가장 먼저 확인하세요</span>
           </div>
-
-          {/* 기준 안내 */}
-          <div className="px-2 text-[11px] text-[#9CA3AF] flex items-start gap-1.5">
-            <BadgeInfo size={12} className="mt-0.5 shrink-0" />
-            <span>기준: 재고 {settings.stockDays}일 / 비율 {settings.marginDrop}% / 비용 {settings.costIncrease}%</span>
+          <div className="grid grid-cols-3 gap-3">
+            {topAlerts.map((a, i) => <TopCard key={`top-${a.id}`} alert={a} rank={i} />)}
           </div>
         </div>
+      )}
 
-        {/* ══ 우측: 알림 리스트 (메인) ══ */}
-        <div className="flex-1 min-w-0">
-          {/* 필터 바 */}
-          <div className="flex items-center justify-between mb-3 gap-3">
-            <div className="flex items-center gap-2">
-              {(["all", "critical", "warning", "info"] as const).map(k => {
-                const labelMap = { all: "전체", critical: "긴급", warning: "주의", info: "정보" };
-                const count = k === "all"
-                  ? alerts.filter(a => !a.hidden).length
-                  : alerts.filter(a => a.priority === k && !a.hidden).length;
-                return (
-                  <button
-                    key={k}
-                    onClick={() => setFilterPriority(k)}
-                    className={`h-[36px] px-3.5 rounded-xl text-[13px] cursor-pointer transition-all flex items-center gap-1.5 ${
-                      filterPriority === k
-                        ? "bg-[#2F4F46] text-white"
-                        : "bg-white border border-[#E6E2DB] text-[#6B7280] hover:bg-[#F7F3ED]"
-                    }`}
-                  >
-                    {labelMap[k]}
-                    <span className={`text-[11px] ${filterPriority === k ? "text-white/60" : "text-[#9CA3AF]"}`}>{count}</span>
-                  </button>
-                );
-              })}
-
-              <div className="w-[1px] h-5 bg-[#E6E2DB] mx-1" />
-
-              {["전체", "경고", "추천", "예측", "할 일"].map(t => (
-                <button
-                  key={t}
-                  onClick={() => setFilterType(t)}
-                  className={`h-[30px] px-2.5 rounded-lg text-[12px] cursor-pointer transition-all ${
-                    filterType === t ? "text-[#2F4F46] bg-[#F7F3ED]" : "text-[#9CA3AF] hover:text-[#6B7280]"
-                  }`}
-                  style={{ fontWeight: filterType === t ? 700 : 400 }}
-                >
-                  {t}
-                </button>
-              ))}
+      {/* ── 요약 스트립 ── */}
+      <div className="grid grid-cols-4 gap-3 mb-5">
+        {[
+          { label: "전체 알림", count: alerts.filter(a => !a.hidden).length, icon: Bell, color: "text-[#2F4F46]", bg: "bg-[#F0F5F4]", active: filterPriority === "all", key: "all" as const },
+          { label: "긴급", count: criticalCount, icon: AlertCircle, color: "text-[#C62828]", bg: "bg-[#FDECEC]", active: filterPriority === "critical", key: "critical" as const },
+          { label: "주의", count: warningCount, icon: ShieldAlert, color: "text-[#8A6A2B]", bg: "bg-[#FFF6E6]", active: filterPriority === "warning", key: "warning" as const },
+          { label: "정보", count: alerts.filter(a => a.priority === "info" && !a.hidden).length, icon: BadgeInfo, color: "text-[#6B7280]", bg: "bg-[#F7F3ED]", active: filterPriority === "info", key: "info" as const },
+        ].map(s => (
+          <button
+            key={s.key}
+            onClick={() => setFilterPriority(s.key === filterPriority ? "all" : s.key as any)}
+            className={`rounded-2xl border px-4 py-3 flex items-center gap-3 cursor-pointer transition-all text-left ${
+              s.active ? "border-[#2F4F46] bg-white shadow-[0_0_0_1px_#2F4F46]" : "border-[#E6E2DB] bg-white hover:border-[#D6D0C8]"
+            }`}
+          >
+            <div className={`w-9 h-9 rounded-xl ${s.bg} flex items-center justify-center shrink-0`}>
+              <s.icon size={17} className={s.color} />
             </div>
-
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
-              <input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="검색"
-                className="h-[36px] w-[140px] pl-8 pr-3 rounded-xl border border-[#D6D0C8] bg-white text-[13px] focus:border-[#2F4F46] focus:outline-none"
-              />
+            <div>
+              <p className="text-[12px] text-[#9CA3AF]">{s.label}</p>
+              <p className="text-[20px] text-[#1F2937]" style={{ fontWeight: 700 }}>{s.count}<span className="text-[13px] text-[#9CA3AF]" style={{ fontWeight: 400 }}>건</span></p>
             </div>
-          </div>
+          </button>
+        ))}
+      </div>
 
-          {/* 알림 리스트 카드 */}
-          <div className="bg-white rounded-2xl border border-[#E6E2DB] shadow-[0_1px_4px_rgba(0,0,0,0.03)] divide-y divide-[#F3EFE8] overflow-hidden">
-
-            {/* 경고 섹션 */}
-            {warnAlerts.length > 0 && (
-              <div>
-                <SectionHeader icon={ShieldAlert} iconColor="text-[#C62828]" label="경고 — 손해 막기" count={warnAlerts.length} />
-                {warnAlerts.map(a => <AlertRow key={a.id} alert={a} />)}
-              </div>
-            )}
-
-            {/* 추천 섹션 */}
-            {recommendAlerts.length > 0 && (
-              <div>
-                <SectionHeader icon={Lightbulb} iconColor="text-[#1B5E20]" label="추천 — 매출 늘리기" count={recommendAlerts.length} />
-                {recommendAlerts.map(a => <AlertRow key={a.id} alert={a} />)}
-              </div>
-            )}
-
-            {/* 예측 섹션 */}
-            {predictAlerts.length > 0 && (
-              <div>
-                <SectionHeader icon={TrendingUp} iconColor="text-[#2F4F46]" label="예측 — 미리 준비" count={predictAlerts.length} />
-                {predictAlerts.map(a => <AlertRow key={a.id} alert={a} />)}
-              </div>
-            )}
-
-            {/* 최근 알림 */}
-            {recentAlerts.length > 0 && (
-              <div>
-                <SectionHeader icon={Bell} iconColor="text-[#9CA3AF]" label="최근 알림" count={recentAlerts.length} />
-                {recentAlerts.map(a => <AlertRow key={a.id} alert={a} />)}
-              </div>
-            )}
-
-            {/* 빈 상태 */}
-            {visibleAlerts.length === 0 && (
-              <div className="py-16 text-center">
-                <Bell size={28} className="text-[#D6D0C8] mx-auto mb-3" />
-                <p className="text-[16px] text-[#6B7280]" style={{ fontWeight: 700 }}>알림이 없습니다</p>
-                <p className="text-[14px] text-[#9CA3AF] mt-1">새로운 알림이 생기면 여기에 표시됩니다.</p>
-              </div>
-            )}
-          </div>
-
-          {/* 하단 여백 */}
-          <div className="h-4" />
+      {/* ── 검색 ── */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2 text-[13px] text-[#9CA3AF]">
+          <BadgeInfo size={13} />
+          <span>기준: 재고 {settings.stockDays}일 / 비율 {settings.marginDrop}% / 비용 {settings.costIncrease}%</span>
+        </div>
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="알림 검색"
+            className="h-[36px] w-[180px] pl-8 pr-3 rounded-xl border border-[#D6D0C8] bg-white text-[13px] focus:border-[#2F4F46] focus:outline-none"
+          />
         </div>
       </div>
+
+      {/* ── 카테고리별 알림 테이블 ── */}
+      <div className="space-y-4">
+        {SECTIONS.map(sec => {
+          const items = sectionAlerts(sec.key);
+          if (items.length === 0) return null;
+          const unreadInSection = items.filter(a => !a.read).length;
+
+          return (
+            <div key={sec.key} className="bg-white rounded-2xl border border-[#E6E2DB] shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden">
+              {/* 섹션 헤더 */}
+              <div className="px-5 py-3 bg-[#FBFAF7] border-b border-[#E6E2DB] flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-7 h-7 rounded-lg ${sec.bg} flex items-center justify-center`}>
+                    <sec.icon size={14} className={sec.color} />
+                  </div>
+                  <span className="text-[15px] text-[#1F2937]" style={{ fontWeight: 700 }}>{sec.label}</span>
+                  <span className="text-[13px] text-[#9CA3AF]">{sec.subLabel}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {unreadInSection > 0 && (
+                    <span className="text-[12px] text-[#C62828] bg-[#FDECEC] px-2 py-0.5 rounded-md" style={{ fontWeight: 700 }}>
+                      {unreadInSection}건 미읽음
+                    </span>
+                  )}
+                  <span className="text-[12px] text-[#9CA3AF]">총 {items.length}건</span>
+                </div>
+              </div>
+
+              {/* 알림 행 */}
+              <div className="divide-y divide-[#F3EFE8]">
+                {items.map(a => <AlertRow key={a.id} alert={a} accentBorder={sec.accentBorder} />)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 빈 상태 */}
+      {visibleAlerts.length === 0 && (
+        <div className="bg-white rounded-2xl border border-[#E6E2DB] py-16 text-center">
+          <Bell size={28} className="text-[#D6D0C8] mx-auto mb-3" />
+          <p className="text-[16px] text-[#6B7280]" style={{ fontWeight: 700 }}>알림이 없습니다</p>
+          <p className="text-[14px] text-[#9CA3AF] mt-1">새로운 알림이 생기면 여기에 표시됩니다.</p>
+        </div>
+      )}
+
+      <div className="h-4" />
 
       {/* 설정 패널 */}
       {renderSettingsPanel()}

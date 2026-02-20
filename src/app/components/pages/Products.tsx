@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import {
   Search, ChevronDown, ChevronUp, ChevronRight, Plus, Check, AlertTriangle, Star,
   Edit2, Package, Layers, FileText, TrendingUp, TrendingDown, Users, Calendar,
-  Clock, Copy, Archive, BarChart3, Eye, EyeOff, X, Info, Minus
+  Clock, Copy, Archive, BarChart3, Eye, EyeOff, X, Info, Minus,
+  UtensilsCrossed, Trash2, ChefHat
 } from "lucide-react";
 import { ProductWizard } from "../modals/ProductWizard";
 
@@ -237,6 +238,150 @@ const materialsLibrary = [
   { id: 12, name: "청소 용품", unit: "세트", price: 5000, category: "청소/세탁", vendor: "다이소", lastPurchase: "01.20", stock: 6, alert: 3, favorite: false },
 ];
 
+/* ═══ 등록 메뉴 (레시피) 타입 및 데이터 ═══ */
+type MenuCategory = "메인" | "국/찌개" | "밥/죽" | "반찬" | "에피타이저" | "후식" | "소스/양념" | "기타";
+
+interface MenuIngredient {
+  name: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+}
+
+interface RegisteredMenu {
+  id: number;
+  name: string;
+  category: MenuCategory;
+  servings: string;
+  ingredients: MenuIngredient[];
+  memo: string;
+  usedInProducts: string[];
+  createdAt: string;
+}
+
+const MENU_CATEGORIES: MenuCategory[] = ["메인", "국/찌개", "밥/죽", "반찬", "에피타이저", "후식", "소스/양념", "기타"];
+
+const MENU_CAT_COLORS: Record<MenuCategory, string> = {
+  "메인": "bg-[#FDECEC] text-[#C62828]",
+  "국/찌개": "bg-[#FFF6E6] text-[#8A6A2B]",
+  "밥/죽": "bg-[#F0F5F4] text-[#2F4F46]",
+  "반찬": "bg-[#ECF7EE] text-[#1B5E20]",
+  "에피타이저": "bg-[#F7F3ED] text-[#6B7280]",
+  "후식": "bg-[#F3E8F9] text-[#7B1FA2]",
+  "소스/양념": "bg-[#FFF6E6] text-[#8A6A2B]",
+  "기타": "bg-[#F7F3ED] text-[#6B7280]",
+};
+
+const INITIAL_MENUS: RegisteredMenu[] = [
+  {
+    id: 1, name: "비지찌개", category: "국/찌개", servings: "1인분",
+    ingredients: [
+      { name: "비지", quantity: 150, unit: "g", unitPrice: 3 },
+      { name: "묵은지", quantity: 80, unit: "g", unitPrice: 8 },
+      { name: "들기름", quantity: 5, unit: "ml", unitPrice: 12 },
+      { name: "치킨스톡", quantity: 5, unit: "g", unitPrice: 6 },
+      { name: "다시다", quantity: 3, unit: "g", unitPrice: 4 },
+      { name: "두부", quantity: 100, unit: "g", unitPrice: 4 },
+      { name: "간장", quantity: 5, unit: "ml", unitPrice: 3 },
+      { name: "소금", quantity: 2, unit: "g", unitPrice: 1 },
+    ],
+    memo: "묵은지는 잘 익은 것 사용. 비지는 당일 구매 권장.",
+    usedInProducts: ["항아리 바베큐"],
+    createdAt: "2026.02.10",
+  },
+  {
+    id: 2, name: "미역감자죽", category: "에피타이저", servings: "1인분",
+    ingredients: [
+      { name: "불린 미역", quantity: 30, unit: "g", unitPrice: 10 },
+      { name: "감자", quantity: 100, unit: "g", unitPrice: 3 },
+      { name: "참기름", quantity: 5, unit: "ml", unitPrice: 15 },
+      { name: "쌀", quantity: 50, unit: "g", unitPrice: 3 },
+      { name: "소금", quantity: 2, unit: "g", unitPrice: 1 },
+      { name: "다진마늘", quantity: 3, unit: "g", unitPrice: 8 },
+    ],
+    memo: "에피타이저로 소량 제공. 감자는 잘 으깨서 부드럽게.",
+    usedInProducts: ["항아리 바베큐"],
+    createdAt: "2026.02.10",
+  },
+  {
+    id: 3, name: "삼겹살 쌈 세트", category: "메인", servings: "1인분",
+    ingredients: [
+      { name: "삼겹살", quantity: 200, unit: "g", unitPrice: 13 },
+      { name: "쌈채소(상추,깻잎,배추)", quantity: 80, unit: "g", unitPrice: 6 },
+      { name: "마늘", quantity: 15, unit: "g", unitPrice: 8 },
+      { name: "고추", quantity: 10, unit: "g", unitPrice: 6 },
+      { name: "쌈장", quantity: 20, unit: "g", unitPrice: 5 },
+    ],
+    memo: "삼겹살은 국내산 냉장만 사용.",
+    usedInProducts: ["항아리 바베큐"],
+    createdAt: "2026.02.10",
+  },
+  {
+    id: 4, name: "무우보쌈", category: "반찬", servings: "1인분",
+    ingredients: [
+      { name: "무", quantity: 100, unit: "g", unitPrice: 2 },
+      { name: "설탕", quantity: 10, unit: "g", unitPrice: 2 },
+      { name: "식초", quantity: 10, unit: "ml", unitPrice: 2 },
+      { name: "고춧가루", quantity: 5, unit: "g", unitPrice: 10 },
+      { name: "매실청", quantity: 5, unit: "ml", unitPrice: 8 },
+    ],
+    memo: "",
+    usedInProducts: ["항아리 바베큐"],
+    createdAt: "2026.02.11",
+  },
+  {
+    id: 5, name: "당근라페", category: "반찬", servings: "1인분",
+    ingredients: [
+      { name: "당근", quantity: 80, unit: "g", unitPrice: 3 },
+      { name: "올리브오일", quantity: 5, unit: "ml", unitPrice: 10 },
+      { name: "레몬즙", quantity: 3, unit: "ml", unitPrice: 15 },
+      { name: "설탕", quantity: 3, unit: "g", unitPrice: 2 },
+      { name: "소금", quantity: 1, unit: "g", unitPrice: 1 },
+    ],
+    memo: "",
+    usedInProducts: ["항아리 바베큐"],
+    createdAt: "2026.02.11",
+  },
+  {
+    id: 6, name: "고추장아찌", category: "반찬", servings: "1인분",
+    ingredients: [
+      { name: "풋고추", quantity: 50, unit: "g", unitPrice: 6 },
+      { name: "간장", quantity: 15, unit: "ml", unitPrice: 3 },
+      { name: "식초", quantity: 10, unit: "ml", unitPrice: 2 },
+      { name: "설탕", quantity: 8, unit: "g", unitPrice: 2 },
+    ],
+    memo: "일주일 전 미리 절여두기",
+    usedInProducts: ["항아리 바베큐"],
+    createdAt: "2026.02.11",
+  },
+  {
+    id: 7, name: "밥 + 김치 세트", category: "밥/죽", servings: "1인분",
+    ingredients: [
+      { name: "쌀", quantity: 150, unit: "g", unitPrice: 3 },
+      { name: "배추김치", quantity: 80, unit: "g", unitPrice: 5 },
+    ],
+    memo: "밥은 압력솥으로 지음",
+    usedInProducts: ["항아리 바베큐", "흑돼지 식사"],
+    createdAt: "2026.02.10",
+  },
+  {
+    id: 8, name: "수정과", category: "후식", servings: "1인분",
+    ingredients: [
+      { name: "계피", quantity: 3, unit: "g", unitPrice: 20 },
+      { name: "생강", quantity: 5, unit: "g", unitPrice: 10 },
+      { name: "설탕", quantity: 20, unit: "g", unitPrice: 2 },
+      { name: "잣", quantity: 3, unit: "g", unitPrice: 30 },
+      { name: "곶감", quantity: 15, unit: "g", unitPrice: 20 },
+    ],
+    memo: "전날 미리 끓여서 냉장 보관",
+    usedInProducts: ["항아리 바베큐"],
+    createdAt: "2026.02.10",
+  },
+];
+
+const calcMenuCost = (menu: RegisteredMenu) =>
+  menu.ingredients.reduce((s, ing) => s + ing.quantity * ing.unitPrice, 0);
+
 /* ═══ 템플릿 데이터 ═══ */
 const templatesData = [
   { id: "exp-basic", name: "체험 기본", type: "체험", desc: "장갑, 소모품, 인건비 포함", items: ["체험 장갑", "체험 키트", "포장 상자"], laborIncluded: true, utilityIncluded: true, totalCost: 9800 },
@@ -271,7 +416,7 @@ const calcCostBreakdown = (p: Product) => {
 /* ═══ 컴포넌트 ═══ */
 export function Products() {
   const [showWizard, setShowWizard] = useState(false);
-  const [activeTab, setActiveTab] = useState<"products" | "materials" | "templates">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "materials" | "menus" | "templates">("products");
   const [expandedProduct, setExpandedProduct] = useState<number | null>(null);
   const [detailTab, setDetailTab] = useState<"cost" | "stats" | "season">("cost");
 
@@ -285,6 +430,24 @@ export function Products() {
   const [matSearch, setMatSearch] = useState("");
   const [matFilter, setMatFilter] = useState("전체");
   const [matData, setMatData] = useState(materialsLibrary);
+
+  /* 등록 메뉴 */
+  const [menus, setMenus] = useState<RegisteredMenu[]>(INITIAL_MENUS);
+  const [menuSearch, setMenuSearch] = useState("");
+  const [menuCatFilter, setMenuCatFilter] = useState("전체");
+  const [expandedMenuId, setExpandedMenuId] = useState<number | null>(null);
+  const [showMenuForm, setShowMenuForm] = useState(false);
+  const [editingMenu, setEditingMenu] = useState<RegisteredMenu | null>(null);
+
+  /* 메뉴 등록 폼 상태 */
+  const [formName, setFormName] = useState("");
+  const [formCategory, setFormCategory] = useState<MenuCategory>("메인");
+  const [formServings, setFormServings] = useState("1인분");
+  const [formMemo, setFormMemo] = useState("");
+  const [formUsedInProducts, setFormUsedInProducts] = useState("");
+  const [formIngredients, setFormIngredients] = useState<MenuIngredient[]>([
+    { name: "", quantity: 0, unit: "g", unitPrice: 0 },
+  ]);
 
   const filteredProducts = useMemo(() => {
     let result = PRODUCTS.filter(p => {
@@ -342,6 +505,7 @@ export function Products() {
   const tabs = [
     { key: "products" as const, label: "상품 목록", icon: Package, count: PRODUCTS.length },
     { key: "materials" as const, label: "재료·자재 목록", icon: Layers, count: matData.length },
+    { key: "menus" as const, label: "등록 메뉴", icon: UtensilsCrossed, count: menus.length },
     { key: "templates" as const, label: "템플릿", icon: FileText, count: templatesData.length },
   ];
 
@@ -1017,6 +1181,599 @@ export function Products() {
     </div>
   );
 
+  /* ═══ 등록 메뉴 탭 ═══ */
+  const filteredMenus = menus.filter(m => {
+    if (menuSearch && !m.name.includes(menuSearch)) return false;
+    if (menuCatFilter !== "전체" && m.category !== menuCatFilter) return false;
+    return true;
+  });
+
+  const openMenuForm = (menu?: RegisteredMenu) => {
+    if (menu) {
+      setEditingMenu(menu);
+      setFormName(menu.name);
+      setFormCategory(menu.category);
+      setFormServings(menu.servings);
+      setFormMemo(menu.memo);
+      setFormUsedInProducts(menu.usedInProducts.join(", "));
+      setFormIngredients([...menu.ingredients]);
+    } else {
+      setEditingMenu(null);
+      setFormName("");
+      setFormCategory("메인");
+      setFormServings("1인분");
+      setFormMemo("");
+      setFormUsedInProducts("");
+      setFormIngredients([{ name: "", quantity: 0, unit: "g", unitPrice: 0 }]);
+    }
+    setShowMenuForm(true);
+  };
+
+  const addFormIngredient = () => {
+    setFormIngredients(prev => [...prev, { name: "", quantity: 0, unit: "g", unitPrice: 0 }]);
+  };
+
+  const updateFormIngredient = (index: number, field: keyof MenuIngredient, value: string | number) => {
+    setFormIngredients(prev => prev.map((ing, i) => i === index ? { ...ing, [field]: value } : ing));
+  };
+
+  const removeFormIngredient = (index: number) => {
+    setFormIngredients(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const saveMenu = () => {
+    const validIngredients = formIngredients.filter(ing => ing.name.trim() !== "");
+    if (!formName.trim()) return;
+
+    const parsedProducts = formUsedInProducts.split(",").map(s => s.trim()).filter(s => s.length > 0);
+    if (editingMenu) {
+      setMenus(prev => prev.map(m => m.id === editingMenu.id ? {
+        ...m, name: formName, category: formCategory, servings: formServings,
+        memo: formMemo, ingredients: validIngredients, usedInProducts: parsedProducts,
+      } : m));
+    } else {
+      const newMenu: RegisteredMenu = {
+        id: Date.now(), name: formName, category: formCategory, servings: formServings,
+        ingredients: validIngredients, memo: formMemo,
+        usedInProducts: parsedProducts, createdAt: "2026.02.20",
+      };
+      setMenus(prev => [newMenu, ...prev]);
+    }
+    setShowMenuForm(false);
+  };
+
+  const deleteMenu = (id: number) => {
+    setMenus(prev => prev.filter(m => m.id !== id));
+    if (expandedMenuId === id) setExpandedMenuId(null);
+  };
+
+  const formTotalCost = formIngredients.reduce((s, ing) => s + ing.quantity * ing.unitPrice, 0);
+
+  /* 코스 순서 정렬용 */
+  const COURSE_ORDER: Record<MenuCategory, number> = {
+    "에피타이저": 0, "메인": 1, "반찬": 2, "국/찌개": 3,
+    "밥/죽": 4, "소스/양념": 5, "후식": 6, "기타": 7,
+  };
+
+  /* 세트 자동 구성 — usedInProducts 기준 그룹핑 */
+  const menuSets = useMemo(() => {
+    const setMap = new Map<string, RegisteredMenu[]>();
+    menus.forEach(m => {
+      m.usedInProducts.forEach(prod => {
+        if (!setMap.has(prod)) setMap.set(prod, []);
+        setMap.get(prod)!.push(m);
+      });
+    });
+    return Array.from(setMap.entries()).map(([name, items]) => ({
+      name,
+      items: [...items].sort((a, b) => COURSE_ORDER[a.category] - COURSE_ORDER[b.category]),
+      totalCost: items.reduce((s, m) => s + calcMenuCost(m), 0),
+      totalIngredients: items.reduce((s, m) => s + m.ingredients.length, 0),
+    }));
+  }, [menus]);
+
+  const unassignedMenus = menus.filter(m => m.usedInProducts.length === 0);
+  const [expandedSetName, setExpandedSetName] = useState<string | null>(null);
+  const [menuSubView, setMenuSubView] = useState<"sets" | "all">("sets");
+
+  const renderMenusTab = () => (
+    <div className="space-y-5">
+      {/* ── 상단 요약 ── */}
+      <div className="grid grid-cols-4 gap-4">
+        {[
+          { label: "코스 세트", value: `${menuSets.length}개`, icon: Layers, color: "#2F4F46" },
+          { label: "등록 메뉴", value: `${menus.length}개`, icon: UtensilsCrossed, color: "#8A6A2B" },
+          { label: "평균 세트 원가", value: menuSets.length > 0 ? `${Math.round(menuSets.reduce((s, st) => s + st.totalCost, 0) / menuSets.length).toLocaleString()}원` : "—", icon: BarChart3, color: "#1B5E20" },
+          { label: "단독 메뉴", value: `${unassignedMenus.length}개`, icon: ChefHat, color: "#6B7280" },
+        ].map((card, i) => (
+          <div key={i} className="bg-white rounded-[14px] border border-[#E6E2DB] p-4 shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
+            <div className="flex items-center gap-2 mb-2">
+              <card.icon size={15} className="text-[#9CA3AF]" />
+              <span className="text-[13px] text-[#6B7280]">{card.label}</span>
+            </div>
+            <p className="text-[20px]" style={{ fontWeight: 700, color: card.color }}>{card.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── 뷰 전환 + 검색 ── */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {([
+            { key: "sets" as const, label: "코스 세트", icon: Layers },
+            { key: "all" as const, label: "전체 메뉴", icon: UtensilsCrossed },
+          ]).map(v => (
+            <button key={v.key} onClick={() => setMenuSubView(v.key)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] cursor-pointer transition-all ${menuSubView === v.key ? "bg-[#2F4F46] text-white" : "bg-white border border-[#E6E2DB] text-[#6B7280] hover:bg-[#F7F3ED]"}`}
+            ><v.icon size={14} /> {v.label}</button>
+          ))}
+          {menuSubView === "all" && (<>
+            <div className="w-[1px] h-5 bg-[#E6E2DB] mx-1" />
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+              <input value={menuSearch} onChange={e => setMenuSearch(e.target.value)} placeholder="메뉴명 검색"
+                className="h-[36px] w-[180px] pl-8 pr-3 rounded-xl border border-[#D6D0C8] bg-white text-[13px] focus:border-[#2F4F46] focus:outline-none" />
+            </div>
+            <div className="flex gap-1.5">
+              {["전체", ...MENU_CATEGORIES].map(cat => (
+                <button key={cat} onClick={() => setMenuCatFilter(cat)}
+                  className={`text-[12px] px-2.5 py-1 rounded-lg transition-all cursor-pointer ${menuCatFilter === cat ? "bg-[#F7F3ED] text-[#2F4F46] border border-[#2F4F46]" : "text-[#9CA3AF] hover:text-[#6B7280]"}`}
+                  style={{ fontWeight: menuCatFilter === cat ? 700 : 400 }}>{cat}</button>
+              ))}
+            </div>
+          </>)}
+        </div>
+        <button onClick={() => openMenuForm()} className="h-[44px] px-5 rounded-xl bg-[#2F4F46] text-white text-[14px] flex items-center gap-2 hover:bg-[#243f38] transition-colors cursor-pointer">
+          <Plus size={15} /> 새 메뉴 등록
+        </button>
+      </div>
+
+      {/* ══ 코스 세트 뷰 ══ */}
+      {menuSubView === "sets" && (
+        <div className="space-y-4">
+          {menuSets.length === 0 ? (
+            <div className="bg-white rounded-[14px] border border-[#E6E2DB] py-12 text-center">
+              <Layers size={28} className="text-[#D6D0C8] mx-auto mb-3" />
+              <p className="text-[15px] text-[#6B7280]" style={{ fontWeight: 700 }}>코스 세트가 없습니다</p>
+              <p className="text-[13px] text-[#9CA3AF] mt-1">메뉴 등록 시 '사용 상품'을 입력하면 자동으로 세트가 만들어집니다.</p>
+            </div>
+          ) : (
+            menuSets.map(set => {
+              const isOpen = expandedSetName === set.name;
+              return (
+                <div key={set.name} className={`bg-white rounded-[14px] border shadow-[0_1px_6px_rgba(0,0,0,0.04)] transition-all ${isOpen ? "border-[#2F4F46] shadow-[0_4px_20px_rgba(0,0,0,0.08)]" : "border-[#E6E2DB] hover:shadow-[0_2px_12px_rgba(0,0,0,0.06)]"}`}>
+                  {/* 세트 헤더 */}
+                  <div className="px-6 py-5 cursor-pointer" onClick={() => setExpandedSetName(isOpen ? null : set.name)}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-[#2F4F46] flex items-center justify-center shrink-0">
+                          <ChefHat size={22} className="text-white" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2.5 mb-1">
+                            <h3 className="text-[18px] text-[#1F2937]" style={{ fontWeight: 700 }}>{set.name} 코스</h3>
+                            <span className="text-[12px] text-[#2F4F46] bg-[#ECF7EE] px-2.5 py-0.5 rounded-lg" style={{ fontWeight: 700 }}>{set.items.length}가지 메뉴</span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {set.items.map((m, i) => (
+                              <span key={m.id} className="text-[12px] text-[#6B7280]">
+                                {m.name}{i < set.items.length - 1 && <span className="text-[#D6D0C8] ml-2">→</span>}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-5">
+                        <div className="text-right">
+                          <p className="text-[12px] text-[#9CA3AF]">1인분 원가 합계</p>
+                          <p className="text-[20px] text-[#2F4F46]" style={{ fontWeight: 700 }}>{set.totalCost.toLocaleString()}원</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button onClick={e => { e.stopPropagation(); setShowWizard(true); }}
+                            className="h-[40px] px-4 rounded-xl bg-[#2F4F46] text-white text-[13px] hover:bg-[#243f38] cursor-pointer transition-colors flex items-center gap-1.5">
+                            <Copy size={13} /> 상품에 적용
+                          </button>
+                          <ChevronDown size={16} className={`text-[#9CA3AF] transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 세트 펼침 */}
+                  {isOpen && (
+                    <div className="border-t border-[#E6E2DB]">
+                      <div className="px-6 py-4">
+                        <div className="grid grid-cols-[32px_1fr] gap-0">
+                          {set.items.map((menu, idx) => {
+                            const cost = calcMenuCost(menu);
+                            const isMenuOpen = expandedMenuId === menu.id;
+                            return (
+                              <div key={menu.id} className="contents">
+                                <div className="flex flex-col items-center">
+                                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[11px] text-white ${idx === 0 ? "bg-[#2F4F46]" : "bg-[#9CA3AF]"}`} style={{ fontWeight: 700 }}>{idx + 1}</div>
+                                  {idx < set.items.length - 1 && <div className="w-[2px] flex-1 bg-[#E6E2DB] my-1" />}
+                                </div>
+                                <div className={`ml-3 mb-3 rounded-xl border transition-all ${isMenuOpen ? "border-[#2F4F46] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)]" : "border-[#E6E2DB] bg-[#FBFAF7] hover:bg-white"}`}>
+                                  <div className="px-4 py-3 flex items-center gap-3 cursor-pointer" onClick={() => setExpandedMenuId(isMenuOpen ? null : menu.id)}>
+                                    <span className={`text-[11px] px-2 py-0.5 rounded-md shrink-0 ${MENU_CAT_COLORS[menu.category]}`} style={{ fontWeight: 700 }}>{menu.category}</span>
+                                    <span className="text-[15px] text-[#1F2937] flex-1" style={{ fontWeight: 700 }}>{menu.name}</span>
+                                    <span className="text-[12px] text-[#9CA3AF] shrink-0">{menu.ingredients.length}가지 재료</span>
+                                    <span className="text-[15px] text-[#1F2937] shrink-0" style={{ fontWeight: 700 }}>{cost.toLocaleString()}원</span>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <button onClick={e => { e.stopPropagation(); openMenuForm(menu); }} className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9CA3AF] hover:bg-[#F7F3ED] hover:text-[#2F4F46] cursor-pointer transition-colors"><Edit2 size={12} /></button>
+                                      <ChevronDown size={12} className={`text-[#9CA3AF] transition-transform ${isMenuOpen ? "rotate-180" : ""}`} />
+                                    </div>
+                                  </div>
+                                  {isMenuOpen && (
+                                    <div className="border-t border-[#E6E2DB] px-4 py-3 bg-white rounded-b-xl">
+                                      <div className="flex gap-4">
+                                        <div className="flex-1 min-w-0">
+                                          <table className="w-full">
+                                            <thead><tr>{["재료명", "수량", "단가", "소계"].map(h => (<th key={h} className="text-[11px] text-[#9CA3AF] px-2 py-1.5 text-left" style={{ fontWeight: 700 }}>{h}</th>))}</tr></thead>
+                                            <tbody>
+                                              {menu.ingredients.map((ing, i) => (
+                                                <tr key={i} className="border-t border-[#F3EFE8]">
+                                                  <td className="text-[13px] text-[#1F2937] px-2 py-1.5">{ing.name}</td>
+                                                  <td className="text-[13px] text-[#6B7280] px-2 py-1.5">{ing.quantity}{ing.unit}</td>
+                                                  <td className="text-[13px] text-[#6B7280] px-2 py-1.5">{ing.unitPrice}원</td>
+                                                  <td className="text-[13px] text-[#1F2937] px-2 py-1.5" style={{ fontWeight: 700 }}>{(ing.quantity * ing.unitPrice).toLocaleString()}원</td>
+                                                </tr>
+                                              ))}
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                        {menu.memo && (
+                                          <div className="w-[180px] shrink-0 bg-[#FBFAF7] rounded-lg px-3 py-2">
+                                            <p className="text-[11px] text-[#9CA3AF] mb-1" style={{ fontWeight: 700 }}>메모</p>
+                                            <p className="text-[12px] text-[#6B7280] leading-relaxed">{menu.memo}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      {/* 세트 합계 바 */}
+                      <div className="px-6 py-4 bg-[#F7F3ED] border-t border-[#E6E2DB] flex items-center justify-between">
+                        <div className="flex items-center gap-6">
+                          <div><p className="text-[12px] text-[#9CA3AF]">메뉴</p><p className="text-[15px] text-[#1F2937]" style={{ fontWeight: 700 }}>{set.items.length}가지</p></div>
+                          <div className="w-[1px] h-8 bg-[#E6E2DB]" />
+                          <div><p className="text-[12px] text-[#9CA3AF]">총 재료</p><p className="text-[15px] text-[#1F2937]" style={{ fontWeight: 700 }}>{set.totalIngredients}가지</p></div>
+                          <div className="w-[1px] h-8 bg-[#E6E2DB]" />
+                          <div><p className="text-[12px] text-[#9CA3AF]">1인분 원가 합계</p><p className="text-[20px] text-[#2F4F46]" style={{ fontWeight: 700 }}>{set.totalCost.toLocaleString()}원</p></div>
+                        </div>
+                        <button onClick={() => setShowWizard(true)} className="h-[44px] px-5 rounded-xl bg-[#2F4F46] text-white text-[14px] hover:bg-[#243f38] cursor-pointer transition-colors flex items-center gap-2">
+                          <Copy size={14} /> 이 세트로 상품 만들기
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+
+          {/* 단독 메뉴 */}
+          {unassignedMenus.length > 0 && (
+            <div className="bg-white rounded-[14px] border border-[#E6E2DB] shadow-[0_1px_4px_rgba(0,0,0,0.03)] overflow-hidden">
+              <div className="px-5 py-3 bg-[#FBFAF7] border-b border-[#E6E2DB] flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <UtensilsCrossed size={14} className="text-[#9CA3AF]" />
+                  <span className="text-[14px] text-[#1F2937]" style={{ fontWeight: 700 }}>단독 메뉴</span>
+                  <span className="text-[12px] text-[#9CA3AF]">아직 세트에 배정되지 않은 메뉴</span>
+                </div>
+                <span className="text-[12px] text-[#9CA3AF] bg-[#F7F3ED] px-2 py-0.5 rounded" style={{ fontWeight: 700 }}>{unassignedMenus.length}개</span>
+              </div>
+              <div className="divide-y divide-[#F3EFE8]">
+                {unassignedMenus.map(menu => {
+                  const cost = calcMenuCost(menu);
+                  return (
+                    <div key={menu.id} className="px-5 py-3 flex items-center gap-3 hover:bg-[#FBFAF7] transition-colors">
+                      <span className={`text-[11px] px-2 py-0.5 rounded-md shrink-0 ${MENU_CAT_COLORS[menu.category]}`} style={{ fontWeight: 700 }}>{menu.category}</span>
+                      <span className="text-[14px] text-[#1F2937] flex-1" style={{ fontWeight: 700 }}>{menu.name}</span>
+                      <span className="text-[12px] text-[#9CA3AF] shrink-0">{menu.ingredients.length}가지</span>
+                      <span className="text-[14px] text-[#1F2937] shrink-0" style={{ fontWeight: 700 }}>{cost.toLocaleString()}원</span>
+                      <button onClick={() => openMenuForm(menu)} className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9CA3AF] hover:bg-[#F7F3ED] hover:text-[#2F4F46] cursor-pointer transition-colors"><Edit2 size={13} /></button>
+                      <button onClick={() => deleteMenu(menu.id)} className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9CA3AF] hover:bg-[#FDECEC] hover:text-[#C62828] cursor-pointer transition-colors"><Trash2 size={13} /></button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="px-4 py-3 bg-[#FBFAF7] rounded-xl border border-[#E6E2DB] flex items-center gap-2.5">
+            <Info size={14} className="text-[#9CA3AF] shrink-0" />
+            <p className="text-[13px] text-[#9CA3AF] leading-relaxed">
+              메뉴를 등록할 때 '사용 상품'을 같은 이름으로 입력하면 자동으로 코스 세트가 만들어집니다. 같은 메뉴를 여러 상품에 넣으면 자동으로 중복 표시됩니다.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ══ 전체 메뉴 뷰 ══ */}
+      {menuSubView === "all" && (
+        <div className="bg-white rounded-[14px] border border-[#E6E2DB] shadow-[0_1px_4px_rgba(0,0,0,0.03)] overflow-hidden">
+          <div className="px-5 py-2.5 bg-[#FBFAF7] border-b border-[#E6E2DB] grid items-center gap-3" style={{ gridTemplateColumns: "1fr 80px 70px 90px 100px 140px 80px" }}>
+            {["메뉴명", "분류", "기준", "재료 수", "원가", "사용 세트", "관리"].map((h, i) => (
+              <span key={h} className={`text-[12px] text-[#9CA3AF] ${i === 4 ? "text-right" : i === 0 ? "" : i === 6 ? "text-right" : "text-center"}`} style={{ fontWeight: 700 }}>{h}</span>
+            ))}
+          </div>
+          {filteredMenus.length === 0 ? (
+            <div className="py-12 text-center">
+              <UtensilsCrossed size={28} className="text-[#D6D0C8] mx-auto mb-3" />
+              <p className="text-[15px] text-[#6B7280]" style={{ fontWeight: 700 }}>등록된 메뉴가 없습니다</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-[#F3EFE8]">
+              {filteredMenus.map(menu => {
+                const cost = calcMenuCost(menu);
+                const isExpanded = expandedMenuId === menu.id;
+                return (
+                  <div key={menu.id}>
+                    <div className={`px-5 py-3 grid items-center gap-3 cursor-pointer transition-colors ${isExpanded ? "bg-[#F7F3ED]" : "hover:bg-[#FBFAF7]"}`}
+                      style={{ gridTemplateColumns: "1fr 80px 70px 90px 100px 140px 80px" }} onClick={() => setExpandedMenuId(isExpanded ? null : menu.id)}>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-[#FFF6E6] flex items-center justify-center shrink-0"><ChefHat size={15} className="text-[#8A6A2B]" /></div>
+                        <span className="text-[14px] text-[#1F2937] truncate" style={{ fontWeight: 700 }}>{menu.name}</span>
+                        <ChevronDown size={12} className={`text-[#9CA3AF] shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                      </div>
+                      <div className="flex justify-center"><span className={`text-[11px] px-2 py-0.5 rounded-md ${MENU_CAT_COLORS[menu.category]}`} style={{ fontWeight: 700 }}>{menu.category}</span></div>
+                      <span className="text-[13px] text-[#6B7280] text-center">{menu.servings}</span>
+                      <span className="text-[13px] text-[#6B7280] text-center">{menu.ingredients.length}가지</span>
+                      <span className="text-[14px] text-[#1F2937] text-right" style={{ fontWeight: 700 }}>{cost.toLocaleString()}원</span>
+                      <div className="flex justify-center gap-1 flex-wrap">
+                        {menu.usedInProducts.length > 0 ? menu.usedInProducts.map(prod => (
+                          <span key={prod} className="text-[11px] text-[#2F4F46] bg-[#ECF7EE] px-2 py-0.5 rounded-md" style={{ fontWeight: 700 }}>{prod}</span>
+                        )) : <span className="text-[12px] text-[#9CA3AF]">—</span>}
+                      </div>
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={e => { e.stopPropagation(); openMenuForm(menu); }} className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9CA3AF] hover:bg-[#F7F3ED] hover:text-[#2F4F46] cursor-pointer transition-colors"><Edit2 size={13} /></button>
+                        <button onClick={e => { e.stopPropagation(); deleteMenu(menu.id); }} className="w-7 h-7 rounded-lg flex items-center justify-center text-[#9CA3AF] hover:bg-[#FDECEC] hover:text-[#C62828] cursor-pointer transition-colors"><Trash2 size={13} /></button>
+                      </div>
+                    </div>
+                    {isExpanded && (
+                      <div className="bg-[#FBFAF7] border-t border-[#E6E2DB] px-5 py-3">
+                        <table className="w-full">
+                          <thead><tr>{["재료명", "수량", "단가", "소계"].map(h => (<th key={h} className="text-[11px] text-[#9CA3AF] px-2 py-1.5 text-left" style={{ fontWeight: 700 }}>{h}</th>))}</tr></thead>
+                          <tbody>{menu.ingredients.map((ing, i) => (
+                            <tr key={i} className="border-t border-[#F3EFE8]">
+                              <td className="text-[13px] text-[#1F2937] px-2 py-1.5">{ing.name}</td>
+                              <td className="text-[13px] text-[#6B7280] px-2 py-1.5">{ing.quantity}{ing.unit}</td>
+                              <td className="text-[13px] text-[#6B7280] px-2 py-1.5">{ing.unitPrice}원</td>
+                              <td className="text-[13px] text-[#1F2937] px-2 py-1.5" style={{ fontWeight: 700 }}>{(ing.quantity * ing.unitPrice).toLocaleString()}원</td>
+                            </tr>
+                          ))}</tbody>
+                        </table>
+                        <div className="border-t border-[#E6E2DB] mt-1 pt-2 flex justify-between px-2">
+                          <span className="text-[13px] text-[#1F2937]" style={{ fontWeight: 700 }}>합계</span>
+                          <span className="text-[15px] text-[#2F4F46]" style={{ fontWeight: 700 }}>{cost.toLocaleString()}원</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {filteredMenus.length > 0 && (
+            <div className="px-5 py-3 bg-[#FBFAF7] border-t border-[#E6E2DB] flex items-center gap-6">
+              <span className="text-[13px] text-[#6B7280]">전체: <strong className="text-[#1F2937]">{filteredMenus.length}개</strong></span>
+              <span className="text-[13px] text-[#6B7280]">평균 원가: <strong className="text-[#1F2937]">{Math.round(filteredMenus.reduce((s, m) => s + calcMenuCost(m), 0) / filteredMenus.length).toLocaleString()}원</strong></span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  /* ═══ 메뉴 등록/수정 폼 모달 ═══ */
+  const renderMenuFormModal = () => {
+    if (!showMenuForm) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: "rgba(60,55,45,0.35)" }} onClick={() => setShowMenuForm(false)}>
+        <div className="bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] w-[680px] max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+          {/* 헤더 */}
+          <div className="px-6 py-5 border-b border-[#E6E2DB] shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#FFF6E6] flex items-center justify-center">
+                  <ChefHat size={20} className="text-[#8A6A2B]" />
+                </div>
+                <div>
+                  <h2 className="text-[18px] text-[#1F2937]" style={{ fontWeight: 700 }}>
+                    {editingMenu ? "메뉴 수정" : "새 메뉴 등록"}
+                  </h2>
+                  <p className="text-[13px] text-[#9CA3AF] mt-0.5">재료와 원가를 등록하면 상품에서 바로 불러올 수 있습니다.</p>
+                </div>
+              </div>
+              <button onClick={() => setShowMenuForm(false)} className="w-10 h-10 rounded-xl flex items-center justify-center text-[#9CA3AF] hover:bg-[#F7F3ED] cursor-pointer transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* 본문 */}
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {/* 기본 정보 */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="col-span-1">
+                <label className="block text-[13px] text-[#6B7280] mb-1.5" style={{ fontWeight: 700 }}>메뉴명</label>
+                <input
+                  value={formName}
+                  onChange={e => setFormName(e.target.value)}
+                  placeholder="예: 비지찌개"
+                  className="w-full h-[44px] px-3.5 rounded-xl border border-[#D6D0C8] bg-white text-[15px] text-[#1F2937] focus:border-[#2F4F46] focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[13px] text-[#6B7280] mb-1.5" style={{ fontWeight: 700 }}>분류</label>
+                <div className="relative">
+                  <select
+                    value={formCategory}
+                    onChange={e => setFormCategory(e.target.value as MenuCategory)}
+                    className="w-full h-[44px] pl-3.5 pr-8 rounded-xl border border-[#D6D0C8] bg-white text-[14px] text-[#1F2937] appearance-none cursor-pointer focus:border-[#2F4F46] focus:outline-none"
+                  >
+                    {MENU_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] pointer-events-none" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[13px] text-[#6B7280] mb-1.5" style={{ fontWeight: 700 }}>기준</label>
+                <div className="relative">
+                  <select
+                    value={formServings}
+                    onChange={e => setFormServings(e.target.value)}
+                    className="w-full h-[44px] pl-3.5 pr-8 rounded-xl border border-[#D6D0C8] bg-white text-[14px] text-[#1F2937] appearance-none cursor-pointer focus:border-[#2F4F46] focus:outline-none"
+                  >
+                    <option>1인분</option>
+                    <option>2인분</option>
+                    <option>4인분</option>
+                    <option>10인분</option>
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            {/* 재료 목록 */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-[14px] text-[#1F2937]" style={{ fontWeight: 700 }}>재료 목록</label>
+                <button onClick={addFormIngredient} className="text-[13px] text-[#2F4F46] flex items-center gap-1 cursor-pointer hover:underline">
+                  <Plus size={14} /> 재료 추가
+                </button>
+              </div>
+
+              <div className="bg-[#FBFAF7] rounded-xl border border-[#E6E2DB] overflow-hidden">
+                {/* 컬럼 헤더 */}
+                <div className="grid gap-2 px-3 py-2 bg-[#F7F3ED]" style={{ gridTemplateColumns: "1fr 80px 60px 80px 80px 36px" }}>
+                  <span className="text-[12px] text-[#9CA3AF]" style={{ fontWeight: 700 }}>재료명</span>
+                  <span className="text-[12px] text-[#9CA3AF]" style={{ fontWeight: 700 }}>수량</span>
+                  <span className="text-[12px] text-[#9CA3AF]" style={{ fontWeight: 700 }}>단위</span>
+                  <span className="text-[12px] text-[#9CA3AF]" style={{ fontWeight: 700 }}>단가</span>
+                  <span className="text-[12px] text-[#9CA3AF] text-right" style={{ fontWeight: 700 }}>소계</span>
+                  <span />
+                </div>
+
+                {/* 재료 행 */}
+                <div className="divide-y divide-[#F3EFE8]">
+                  {formIngredients.map((ing, idx) => (
+                    <div key={idx} className="grid gap-2 px-3 py-2 items-center" style={{ gridTemplateColumns: "1fr 80px 60px 80px 80px 36px" }}>
+                      <input
+                        value={ing.name}
+                        onChange={e => updateFormIngredient(idx, "name", e.target.value)}
+                        placeholder="재료명"
+                        className="h-[36px] px-2.5 rounded-lg border border-[#D6D0C8] bg-white text-[14px] text-[#1F2937] focus:border-[#2F4F46] focus:outline-none"
+                      />
+                      <input
+                        type="number"
+                        value={ing.quantity || ""}
+                        onChange={e => updateFormIngredient(idx, "quantity", Number(e.target.value))}
+                        placeholder="0"
+                        className="h-[36px] px-2 rounded-lg border border-[#D6D0C8] bg-white text-[14px] text-[#1F2937] text-center focus:border-[#2F4F46] focus:outline-none"
+                      />
+                      <div className="relative">
+                        <select
+                          value={ing.unit}
+                          onChange={e => updateFormIngredient(idx, "unit", e.target.value)}
+                          className="h-[36px] w-full pl-2 pr-5 rounded-lg border border-[#D6D0C8] bg-white text-[13px] appearance-none cursor-pointer focus:border-[#2F4F46] focus:outline-none"
+                        >
+                          <option>g</option>
+                          <option>ml</option>
+                          <option>개</option>
+                          <option>장</option>
+                          <option>kg</option>
+                        </select>
+                        <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] pointer-events-none" />
+                      </div>
+                      <input
+                        type="number"
+                        value={ing.unitPrice || ""}
+                        onChange={e => updateFormIngredient(idx, "unitPrice", Number(e.target.value))}
+                        placeholder="0"
+                        className="h-[36px] px-2 rounded-lg border border-[#D6D0C8] bg-white text-[14px] text-[#1F2937] text-center focus:border-[#2F4F46] focus:outline-none"
+                      />
+                      <span className="text-[13px] text-[#1F2937] text-right" style={{ fontWeight: 700 }}>
+                        {(ing.quantity * ing.unitPrice).toLocaleString()}
+                      </span>
+                      <button
+                        onClick={() => removeFormIngredient(idx)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-[#9CA3AF] hover:text-[#C62828] hover:bg-[#FDECEC] cursor-pointer transition-colors"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 합계 */}
+                <div className="border-t border-[#E6E2DB] px-3 py-3 flex items-center justify-between bg-[#F7F3ED]">
+                  <span className="text-[14px] text-[#1F2937]" style={{ fontWeight: 700 }}>재료 원가 합계</span>
+                  <span className="text-[18px] text-[#2F4F46]" style={{ fontWeight: 700 }}>{formTotalCost.toLocaleString()}원</span>
+                </div>
+              </div>
+
+              {/* 빠른 추가 버튼 */}
+              <button onClick={addFormIngredient} className="mt-3 w-full h-[40px] rounded-xl border border-dashed border-[#D6D0C8] text-[13px] text-[#9CA3AF] hover:text-[#2F4F46] hover:border-[#2F4F46] cursor-pointer transition-colors flex items-center justify-center gap-1.5">
+                <Plus size={14} /> 재료 한 줄 추가
+              </button>
+            </div>
+
+            {/* 사용 상품 */}
+            <div>
+              <label className="block text-[13px] text-[#6B7280] mb-1.5" style={{ fontWeight: 700 }}>사용 상품 (세트 구성)</label>
+              <input
+                value={formUsedInProducts}
+                onChange={e => setFormUsedInProducts(e.target.value)}
+                placeholder="예: 항아리 바베큐 (여러 상품은 쉼표로 구분)"
+                className="w-full h-[44px] px-3.5 rounded-xl border border-[#D6D0C8] bg-white text-[15px] text-[#1F2937] focus:border-[#2F4F46] focus:outline-none"
+              />
+              <p className="text-[12px] text-[#9CA3AF] mt-1">같은 상품명을 입력한 메뉴끼리 자동으로 코스 세트가 됩니다.</p>
+            </div>
+
+            {/* 메모 */}
+            <div>
+              <label className="block text-[13px] text-[#6B7280] mb-1.5" style={{ fontWeight: 700 }}>메모 (선택)</label>
+              <textarea
+                value={formMemo}
+                onChange={e => setFormMemo(e.target.value)}
+                placeholder="조리 팁이나 주의사항을 적어주세요"
+                rows={2}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D6D0C8] bg-white text-[14px] text-[#1F2937] focus:border-[#2F4F46] focus:outline-none resize-none leading-relaxed"
+              />
+            </div>
+          </div>
+
+          {/* 하단 버튼 */}
+          <div className="px-6 py-4 border-t border-[#E6E2DB] flex items-center justify-between shrink-0">
+            <button onClick={() => setShowMenuForm(false)} className="h-[48px] px-5 rounded-xl border border-[#E6E2DB] text-[#6B7280] text-[14px] hover:bg-[#F7F3ED] transition-colors cursor-pointer">
+              취소
+            </button>
+            <div className="flex items-center gap-3">
+              <span className="text-[14px] text-[#6B7280]">
+                원가 합계: <strong className="text-[#2F4F46] text-[16px]">{formTotalCost.toLocaleString()}원</strong>
+              </span>
+              <button
+                onClick={saveMenu}
+                disabled={!formName.trim() || formIngredients.filter(i => i.name.trim()).length === 0}
+                className="h-[48px] px-7 rounded-xl bg-[#2F4F46] text-white text-[14px] hover:bg-[#243f38] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {editingMenu ? "수정 완료" : "메뉴 등록"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   /* ═══ 템플릿 탭 ═══ */
   const renderTemplatesTab = () => (
     <div className="space-y-6">
@@ -1097,13 +1854,23 @@ export function Products() {
             <Plus size={16} /> 새 상품 등록
           </button>
         )}
+        {activeTab === "menus" && (
+          <button
+            onClick={() => openMenuForm()}
+            className="h-[48px] px-6 rounded-xl bg-[#2F4F46] text-white text-[14px] flex items-center gap-2 hover:bg-[#243f38] transition-colors cursor-pointer"
+          >
+            <Plus size={16} /> 새 메뉴 등록
+          </button>
+        )}
       </div>
 
       {activeTab === "products" && renderProductsTab()}
       {activeTab === "materials" && renderMaterialsTab()}
+      {activeTab === "menus" && renderMenusTab()}
       {activeTab === "templates" && renderTemplatesTab()}
 
       {showWizard && <ProductWizard onClose={() => setShowWizard(false)} />}
+      {renderMenuFormModal()}
     </div>
   );
 }

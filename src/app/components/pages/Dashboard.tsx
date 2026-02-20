@@ -104,7 +104,7 @@ export function Dashboard() {
             </div>
           </div>
           <div className="h-[120px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={chartData}>
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#9CA3AF" }} />
                 <YAxis hide />

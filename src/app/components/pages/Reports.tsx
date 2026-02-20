@@ -82,7 +82,7 @@ export function Reports() {
         <div className="bg-white rounded-[14px] border border-[#E6E2DB] p-7 shadow-[0_1px_6px_rgba(0,0,0,0.04)]">
           <h2 className="text-[18px] font-bold text-[#1F2937] mb-5">월별 순수익</h2>
           <div className="h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={monthlyData}>
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#9CA3AF" }} />
                 <YAxis hide />
@@ -100,7 +100,7 @@ export function Reports() {
         <div className="bg-white rounded-[14px] border border-[#E6E2DB] p-7 shadow-[0_1px_6px_rgba(0,0,0,0.04)]">
           <h2 className="text-[18px] font-bold text-[#1F2937] mb-5">상품별 남는 금액</h2>
           <div className="h-[220px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={productData} layout="vertical">
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="name" width={120} axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: "#6B7280" }} />
@@ -120,7 +120,7 @@ export function Reports() {
         <div className="bg-white rounded-[14px] border border-[#E6E2DB] p-7 shadow-[0_1px_6px_rgba(0,0,0,0.04)]">
           <h2 className="text-[18px] font-bold text-[#1F2937] mb-5">비용 구성</h2>
           <div className="h-[200px] flex items-center">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie data={costBreakdown} cx="50%" cy="50%" outerRadius={80} innerRadius={45} dataKey="value" paddingAngle={2}>
                   {costBreakdown.map((_, i) => <Cell key={i} fill={costColors[i]} />)}
