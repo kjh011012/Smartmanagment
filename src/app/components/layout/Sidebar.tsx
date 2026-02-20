@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router";
 import {
   LayoutDashboard, CalendarDays, Wallet, Package, Receipt,
-  Users, BarChart3, Lightbulb, Bot, Zap, Settings, Building2, ShoppingBag, Percent, RotateCcw
+  Users, BarChart3, Lightbulb, Bot, Zap, Settings, Building2, ShoppingBag, Percent, RotateCcw, Landmark
 } from "lucide-react";
 
 interface SidebarProps {
@@ -18,6 +18,7 @@ const menuItems = [
   { path: "/specialties", label: "특산품 관리", icon: ShoppingBag },
   { path: "/fees-taxes", label: "수수료·세금", icon: Percent },
   { path: "/refund-policy", label: "환불 규정", icon: RotateCcw },
+  { path: "/subsidies", label: "보조금 관리", icon: Landmark },
   { path: "/expense-input", label: "지출 자동 입력", icon: Receipt },
   { path: "/customers", label: "고객 관리", icon: Users },
   { path: "/reports", label: "분석 리포트", icon: BarChart3 },

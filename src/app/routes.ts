@@ -40,6 +40,13 @@ export const router = createBrowserRouter([
         },
       },
       { path: "refund-policy", Component: RefundPolicy },
+      {
+        path: "subsidies",
+        lazy: async () => {
+          const { Subsidies } = await import("./components/pages/Subsidies");
+          return { Component: Subsidies };
+        },
+      },
       { path: "settings", Component: SettingsPage },
     ],
   },
