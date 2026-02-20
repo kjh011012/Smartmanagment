@@ -15,8 +15,9 @@ const pageTitles: Record<string, { title: string; subtitle?: string }> = {
   "/customers": { title: "고객 관리", subtitle: "기억하기 쉬운 고객장부" },
   "/reports": { title: "분석 리포트", subtitle: "숫자 중심 경영 보고서" },
   "/smart-center": { title: "스마트 경영 센터", subtitle: "추천, 경고, 예측을 한곳에" },
-  "/ai-assistant": { title: "인공지능 경영 비서", subtitle: "질문하면 분석하고, 바로 처리지 도와드려요." },
+  "/ai-assistant": { title: "인공지능 경영 비서", subtitle: "질문하면 분석하고, 바로 처리�� 도와드려요." },
   "/automation": { title: "자동화 설정", subtitle: "토글 하나로 자동화" },
+  "/fixed-costs": { title: "고정비·시설관리·운영비", subtitle: "매월 발생하는 비용을 한눈에 관리" },
   "/settings": { title: "설정", subtitle: "사업장 정보와 요금제 관리" },
 };
 

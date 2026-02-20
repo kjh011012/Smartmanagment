@@ -10,6 +10,7 @@ import { Reports } from "./components/pages/Reports";
 import { SmartCenter } from "./components/pages/SmartCenter";
 import { AIAssistant } from "./components/pages/AIAssistant";
 import { Automation } from "./components/pages/Automation";
+import { FixedCosts } from "./components/pages/FixedCosts";
 import { SettingsPage } from "./components/pages/SettingsPage";
 
 export const router = createBrowserRouter([
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
       { path: "smart-center", Component: SmartCenter },
       { path: "ai-assistant", Component: AIAssistant },
       { path: "automation", Component: Automation },
+      { path: "fixed-costs", Component: FixedCosts },
       { path: "settings", Component: SettingsPage },
     ],
   },
