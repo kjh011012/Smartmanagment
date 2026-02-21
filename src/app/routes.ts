@@ -47,6 +47,13 @@ export const router = createBrowserRouter([
           return { Component: Subsidies };
         },
       },
+      {
+        path: "workforce",
+        lazy: async () => {
+          const { Workforce } = await import("./components/pages/Workforce");
+          return { Component: Workforce };
+        },
+      },
       { path: "settings", Component: SettingsPage },
     ],
   },
