@@ -453,29 +453,33 @@ export function Subsidies() {
             {/* Bar chart */}
             <div className={`${cardBg} rounded-[14px] border ${cardBorder} p-5 shadow-[0_1px_4px_rgba(0,0,0,0.03)]`}>
               <h3 className={`text-[15px] ${textP} mb-4`} style={{ fontWeight: 700 }}>보조금별 사용률 (만원)</h3>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={barData} barSize={24}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#E6E2DB"} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: dark ? "#94A3B8" : "#9CA3AF" }} />
-                  <YAxis tick={{ fontSize: 11, fill: dark ? "#94A3B8" : "#9CA3AF" }} />
-                  <Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, backgroundColor: dark ? "#1E293B" : "#fff", borderColor: dark ? "#334155" : "#E6E2DB", color: dark ? "#F1F5F9" : "#1F2937" }} />
-                  <Bar dataKey="사용액" fill="#2F4F46" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="잔액" fill={dark ? "#334155" : "#E6E2DB"} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div style={{ width: "100%", minWidth: 0, height: 220 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={barData} barSize={24}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#E6E2DB"} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, fill: dark ? "#94A3B8" : "#9CA3AF" }} />
+                    <YAxis tick={{ fontSize: 11, fill: dark ? "#94A3B8" : "#9CA3AF" }} />
+                    <Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, backgroundColor: dark ? "#1E293B" : "#fff", borderColor: dark ? "#334155" : "#E6E2DB", color: dark ? "#F1F5F9" : "##1F2937" }} />
+                    <Bar dataKey="사용액" fill="#2F4F46" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="잔액" fill={dark ? "#334155" : "#E6E2DB"} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
             {/* Line chart */}
             <div className={`${cardBg} rounded-[14px] border ${cardBorder} p-5 shadow-[0_1px_4px_rgba(0,0,0,0.03)]`}>
               <h3 className={`text-[15px] ${textP} mb-4`} style={{ fontWeight: 700 }}>월별 사용 추이 (만원)</h3>
-              <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#E6E2DB"} />
-                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: dark ? "#94A3B8" : "#9CA3AF" }} />
-                  <YAxis tick={{ fontSize: 11, fill: dark ? "#94A3B8" : "#9CA3AF" }} />
-                  <Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, backgroundColor: dark ? "#1E293B" : "#fff", borderColor: dark ? "#334155" : "#E6E2DB", color: dark ? "#F1F5F9" : "#1F2937" }} />
-                  <Line type="monotone" dataKey="사용액" stroke="#2F4F46" strokeWidth={2} dot={{ r: 4, fill: "#2F4F46" }} />
-                </LineChart>
-              </ResponsiveContainer>
+              <div style={{ width: "100%", minWidth: 0, height: 220 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={dark ? "#334155" : "#E6E2DB"} />
+                    <XAxis dataKey="month" tick={{ fontSize: 11, fill: dark ? "#94A3B8" : "#9CA3AF" }} />
+                    <YAxis tick={{ fontSize: 11, fill: dark ? "#94A3B8" : "#9CA3AF" }} />
+                    <Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, backgroundColor: dark ? "#1E293B" : "#fff", borderColor: dark ? "#334155" : "#E6E2DB", color: dark ? "#F1F5F9" : "#1F2937" }} />
+                    <Line type="monotone" dataKey="사용액" stroke="#2F4F46" strokeWidth={2} dot={{ r: 4, fill: "#2F4F46" }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
@@ -483,14 +487,16 @@ export function Subsidies() {
           <div className={`${cardBg} rounded-[14px] border ${cardBorder} p-5 shadow-[0_1px_4px_rgba(0,0,0,0.03)]`}>
             <h3 className={`text-[15px] ${textP} mb-4`} style={{ fontWeight: 700 }}>카테고리별 지출 비중 (만원)</h3>
             <div className="flex items-center">
-              <ResponsiveContainer width="50%" height={200}>
-                <PieChart>
-                  <Pie data={categoryData} cx="50%" cy="50%" outerRadius={80} innerRadius={40} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                    {categoryData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, backgroundColor: dark ? "#1E293B" : "#fff", borderColor: dark ? "#334155" : "#E6E2DB", color: dark ? "#F1F5F9" : "#1F2937" }} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div style={{ width: "50%", minWidth: 0, height: 200 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={categoryData} cx="50%" cy="50%" outerRadius={80} innerRadius={40} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                      {categoryData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, backgroundColor: dark ? "#1E293B" : "#fff", borderColor: dark ? "#334155" : "#E6E2DB", color: dark ? "#F1F5F9" : "#1F2937" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
               <div className="flex-1 space-y-2 pl-4">
                 {categoryData.map((c, i) => (
                   <div key={c.name} className="flex items-center gap-2">
