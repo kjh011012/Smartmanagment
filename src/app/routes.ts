@@ -54,6 +54,13 @@ export const router = createBrowserRouter([
           return { Component: Workforce };
         },
       },
+      {
+        path: "inventory",
+        lazy: async () => {
+          const { Inventory } = await import("./components/pages/Inventory");
+          return { Component: Inventory };
+        },
+      },
       { path: "settings", Component: SettingsPage },
     ],
   },

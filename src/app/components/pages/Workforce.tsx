@@ -285,8 +285,8 @@ export function Workforce() {
               <div className={`flex-1 min-w-0 ${cardBg} rounded-[14px] border ${cardBd} p-5 shadow-[0_1px_4px_rgba(0,0,0,0.03)]`}>
                 <h3 className={`text-[15px] ${t1} mb-1`} style={{ fontWeight: 700 }}>이번달 인건비 구성 (만원)</h3>
                 <p className={`text-[13px] ${t3} mb-4`}>이번달은 알바 근무시간 증가로 주휴수당이 늘었어요.</p>
-                <div className="flex items-center">
-                  <div style={{ width: "55%", minWidth: 0, height: 200, overflow: "visible" }}>
+                <div className="flex items-center overflow-visible">
+                  <div style={{ width: "55%", minWidth: 200, height: 200 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart margin={{ top: 20, right: 60, bottom: 20, left: 60 }}>
                         <Pie data={stats.pieData} cx="50%" cy="50%" outerRadius={70} innerRadius={35} dataKey="value" label={({ name, percent, x, y, textAnchor }) => (<text x={x} y={y} textAnchor={textAnchor} fill={dark ? "#E2E8F0" : "#374151"} fontSize={13} dominantBaseline="central">{`${name} ${(percent * 100).toFixed(0)}%`}</text>)}>
@@ -682,7 +682,7 @@ export function Workforce() {
             {[
               { l: "직원 급여 합계", v: fmt(stats.totalEmpPay), c: "#2F4F46" },
               { l: "알바 급여 합계", v: fmt(stats.totalPtPay), c: "#FF8F00" },
-              { l: "주휴수당 합계", v: fmt(stats.totalWeeklyPay), c: "#E67E22" },
+              { l: "주휴수당 ���계", v: fmt(stats.totalWeeklyPay), c: "#E67E22" },
               { l: "회사부담(보험)", v: fmt(stats.totalCompIns), c: "#1B5E20" },
               { l: "최종 실부담 총액", v: fmt(stats.totalCompBurden), c: "#2F4F46" },
             ].map(k => (
